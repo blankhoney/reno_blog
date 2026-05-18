@@ -1,5 +1,7 @@
 ---
 import BaseLayout from "../../../layouts/base-layout.astro";
+import { getCollection } from "astro:content";
+import { getPublishedEntriesForLanguage } from "../../../lib/content";
 import { SUPPORTED_LANGUAGES, type Language } from "../../../lib/i18n";
 
 export function getStaticPaths() {
@@ -11,11 +13,30 @@ const copy = {
   zh: { title: "写作", body: "长文、技术总结、复盘和学习路径会整理在这里。" },
   en: { title: "Writing", body: "Essays, technical summaries, retrospectives, and learning paths will live here." },
 }[language];
+const entries = getPublishedEntriesForLanguage(
+  (await getCollection("writing")).map((entry) => ({
+    ...entry,
+    slug: entry.data.translationKey,
+  })),
+  language,
+);
 ---
 
 <BaseLayout language={language} title={copy.title}>
   <section class="page-section">
     <h1>{copy.title}</h1>
     <p>{copy.body}</p>
+    <div class="content-list">
+      {
+        entries.map((entry) => (
+          <article class="content-card">
+            <a href={`/${language}/writing/${entry.slug}/`}>
+              <h2>{entry.data.title}</h2>
+              {entry.data.summary && <p>{entry.data.summary}</p>}
+            </a>
+          </article>
+        ))
+      }
+    </div>
   </section>
 </BaseLayout>

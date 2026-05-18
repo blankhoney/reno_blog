@@ -88,3 +88,36 @@ a:hover {
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
+
+.content-list {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  margin-top: 2rem;
+}
+
+.content-list.compact {
+  grid-template-columns: 1fr;
+}
+
+.content-card {
+  border: 1px solid color-mix(in oklab, currentColor 14%, transparent);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.content-card h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.content-card p {
+  font-size: 0.95rem;
+  margin-bottom: 0;
+}
+
+.content-card .meta {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

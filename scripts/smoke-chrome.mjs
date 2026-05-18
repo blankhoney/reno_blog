@@ -19,6 +19,7 @@ try {
   await page.getByRole("link", { name: "Projects" }).click();
   await page.waitForURL("**/en/projects/");
   await page.getByRole("heading", { name: "Projects" }).waitFor();
+  await page.getByRole("heading", { name: "Reno Blog" }).waitFor();
 } finally {
   await browser.close();
 }
