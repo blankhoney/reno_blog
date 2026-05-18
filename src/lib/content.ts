@@ -8,6 +8,7 @@ export type LocalizedContentEntry = {
     date: Date;
     language: Language;
     status: PublishStatus;
+    translationKey?: string;
   };
 };
 
@@ -23,4 +24,17 @@ export function getPublishedEntriesForLanguage<TEntry extends LocalizedContentEn
     .filter((entry) => entry.data.language === language)
     .filter((entry) => entry.data.status === "published")
     .toSorted((a, b) => b.data.date.getTime() - a.data.date.getTime());
+}
+
+export function getEntryForLanguageAndSlug<TEntry extends LocalizedContentEntry>(
+  entries: TEntry[],
+  language: Language,
+  slug: string,
+): TEntry | undefined {
+  return entries.find(
+    (entry) =>
+      entry.data.language === language &&
+      entry.data.status === "published" &&
+      entry.data.translationKey === slug,
+  );
 }

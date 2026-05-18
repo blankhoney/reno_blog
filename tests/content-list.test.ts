@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   getContentSlug,
+  getEntryForLanguageAndSlug,
   getPublishedEntriesForLanguage,
   type LocalizedContentEntry,
 } from "../src/lib/content";
@@ -52,5 +53,35 @@ describe("content lists", () => {
       "newer",
       "older",
     ]);
+  });
+
+  it("finds a published entry by language and translation key", () => {
+    const entries = [
+      {
+        slug: "draft",
+        data: {
+          date: new Date("2026-01-01"),
+          language: "en",
+          status: "draft",
+          translationKey: "draft",
+        },
+      },
+      {
+        slug: "site-launch",
+        data: {
+          date: new Date("2026-01-02"),
+          language: "en",
+          status: "published",
+          translationKey: "site-launch",
+        },
+      },
+    ] satisfies Array<
+      LocalizedContentEntry & { data: LocalizedContentEntry["data"] & { translationKey: string } }
+    >;
+
+    expect(getEntryForLanguageAndSlug(entries, "en", "site-launch")?.slug).toBe(
+      "site-launch",
+    );
+    expect(getEntryForLanguageAndSlug(entries, "en", "draft")).toBeUndefined();
   });
 });

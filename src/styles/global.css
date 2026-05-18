@@ -121,3 +121,28 @@ a:hover {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+
+.content-detail {
+  margin: 0 auto;
+  max-width: 48rem;
+  padding: clamp(3rem, 8vw, 6rem) clamp(1rem, 4vw, 2rem);
+}
+
+.content-detail h1 {
+  font-size: clamp(2.25rem, 6vw, 4.5rem);
+  line-height: 1;
+  margin: 0;
+}
+
+.lead {
+  color: color-mix(in oklab, currentColor 68%, transparent);
+  font-size: 1.15rem;
+  line-height: 1.7;
+}
+
+.prose {
+  border-top: 1px solid color-mix(in oklab, currentColor 14%, transparent);
+  line-height: 1.8;
+  margin-top: 2rem;
+  padding-top: 2rem;
+}

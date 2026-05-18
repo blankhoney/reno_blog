@@ -1,0 +1,38 @@
+---
+import BaseLayout from "../../../layouts/base-layout.astro";
+import { getCollection, render, type CollectionEntry } from "astro:content";
+
+type Props = {
+  entry: CollectionEntry<"notes">;
+};
+
+export async function getStaticPaths() {
+  const entries = await getCollection("notes", (entry) => entry.data.status === "published");
+
+  return entries.map((entry) => ({
+    params: {
+      lang: entry.data.language,
+      slug: entry.data.translationKey,
+    },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<BaseLayout
+  language={entry.data.language}
+  title={entry.data.title}
+  description={entry.data.summary}
+>
+  <article class="content-detail compact-detail">
+    <p class="eyebrow">{entry.data.date.toLocaleDateString(entry.data.language)}</p>
+    <h1>{entry.data.title}</h1>
+    {entry.data.summary && <p class="lead">{entry.data.summary}</p>}
+    <div class="prose">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

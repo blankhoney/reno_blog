@@ -20,6 +20,9 @@ try {
   await page.waitForURL("**/en/projects/");
   await page.getByRole("heading", { name: "Projects" }).waitFor();
   await page.getByRole("heading", { name: "Reno Blog" }).waitFor();
+  await page.locator(".content-card a").first().click();
+  await page.waitForURL("**/en/projects/reno-blog/");
+  await page.getByRole("heading", { name: "Reno Blog" }).waitFor();
 } finally {
   await browser.close();
 }
