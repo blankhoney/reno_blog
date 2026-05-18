@@ -35,6 +35,8 @@ try {
   await page.locator(".content-card a").first().click();
   await page.waitForURL("**/en/projects/reno-blog/");
   await page.getByRole("heading", { name: "Reno Blog" }).waitFor();
+  await page.getByRole("link", { name: "Back to Projects" }).click();
+  await page.waitForURL("**/en/projects/");
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${baseUrl}/zh/`, { waitUntil: "networkidle" });

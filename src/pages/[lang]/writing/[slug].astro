@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../../layouts/base-layout.astro";
 import { getCollection, render, type CollectionEntry } from "astro:content";
+import { getSectionNavigation } from "../../../lib/sections";
 
 type Props = {
   entry: CollectionEntry<"writing">;
@@ -20,6 +21,8 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const { Content } = await render(entry);
+const sectionNavigation = getSectionNavigation(entry.data.language, "writing");
+const breadcrumbLabel = entry.data.language === "zh" ? "内容位置" : "Content location";
 ---
 
 <BaseLayout
@@ -28,6 +31,9 @@ const { Content } = await render(entry);
   description={entry.data.summary}
 >
   <article class="content-detail">
+    <nav class="breadcrumb" aria-label={breadcrumbLabel}>
+      <a href={sectionNavigation.href}>{sectionNavigation.returnLabel}</a>
+    </nav>
     <p class="eyebrow">{entry.data.date.toLocaleDateString(entry.data.language)}</p>
     <h1>{entry.data.title}</h1>
     {entry.data.summary && <p class="lead">{entry.data.summary}</p>}
