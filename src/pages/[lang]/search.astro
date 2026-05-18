@@ -1,0 +1,134 @@
+---
+import { getCollection } from "astro:content";
+
+import BaseLayout from "../../layouts/base-layout.astro";
+import { buildContentIndex } from "../../lib/content-index";
+import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, isSupportedLanguage, type Language } from "../../lib/i18n";
+import { filterSearchItems } from "../../lib/search";
+
+type Props = {
+  language: Language;
+};
+
+const labels = {
+  zh: {
+    count: "条结果",
+    description: "按标题、摘要、标签和内容分区快速筛选公开内容。",
+    empty: "没有匹配结果",
+    eyebrow: "内容索引",
+    input: "搜索公开内容",
+    placeholder: "搜索写作、笔记、项目",
+    title: "搜索",
+  },
+  en: {
+    count: "results",
+    description: "Filter public writing, notes, and projects by title, summary, tags, and section.",
+    empty: "No matching results",
+    eyebrow: "Content index",
+    input: "Search public content",
+    placeholder: "Search writing, notes, projects",
+    title: "Search",
+  },
+};
+
+export function getStaticPaths() {
+  return SUPPORTED_LANGUAGES.map((language) => ({
+    params: { lang: language },
+    props: { language },
+  }));
+}
+
+const requestedLanguage = Astro.props.language ?? Astro.params.lang;
+const language: Language =
+  requestedLanguage && isSupportedLanguage(requestedLanguage)
+    ? requestedLanguage
+    : DEFAULT_LANGUAGE;
+const copy = labels[language];
+const [writing, notes, projects] = await Promise.all([
+  getCollection("writing"),
+  getCollection("notes"),
+  getCollection("projects"),
+]);
+const items = filterSearchItems(
+  buildContentIndex([
+    { section: "writing", entries: writing },
+    { section: "notes", entries: notes },
+    { section: "projects", entries: projects },
+  ]),
+  language,
+  "",
+);
+---
+
+<BaseLayout language={language} title={copy.title} description={copy.description}>
+  <section class="page-section search-page">
+    <p class="eyebrow">{copy.eyebrow}</p>
+    <h1>{copy.title}</h1>
+    <p>{copy.description}</p>
+
+    <div class="search-panel" data-search-root data-count-label={copy.count}>
+      <label class="sr-only" for="site-search">{copy.input}</label>
+      <input
+        data-search-input
+        id="site-search"
+        name="q"
+        placeholder={copy.placeholder}
+        type="search"
+      />
+      <p class="search-count" data-search-count>{items.length} {copy.count}</p>
+      <div class="content-list compact" data-search-results>
+        {
+          items.map((item) => (
+            <article
+              class="content-card"
+              data-search-card
+              data-search-text={[item.title, item.summary, item.section, item.slug, ...item.tags]
+                .join(" ")
+                .toLowerCase()}
+            >
+              <p class="meta">{item.section} / {item.date}</p>
+              <h2>
+                <a href={item.url}>{item.title}</a>
+              </h2>
+              <p>{item.summary}</p>
+            </article>
+          ))
+        }
+      </div>
+      <p class="empty-state" data-search-empty hidden>{copy.empty}</p>
+    </div>
+  </section>
+
+  <script is:inline>
+    const root = document.querySelector("[data-search-root]");
+    const input = root?.querySelector("[data-search-input]");
+    const count = root?.querySelector("[data-search-count]");
+    const empty = root?.querySelector("[data-search-empty]");
+    const cards = Array.from(root?.querySelectorAll("[data-search-card]") ?? []);
+    const countLabel = root?.getAttribute("data-count-label") ?? "results";
+
+    function updateSearchResults() {
+      const query = input?.value.trim().toLowerCase() ?? "";
+      let visibleCount = 0;
+
+      cards.forEach((card) => {
+        const matches = !query || card.getAttribute("data-search-text")?.includes(query);
+        card.hidden = !matches;
+
+        if (matches) {
+          visibleCount += 1;
+        }
+      });
+
+      if (count) {
+        count.textContent = `${visibleCount} ${countLabel}`;
+      }
+
+      if (empty) {
+        empty.hidden = visibleCount > 0;
+      }
+    }
+
+    input?.addEventListener("input", updateSearchResults);
+  </script>
+</BaseLayout>

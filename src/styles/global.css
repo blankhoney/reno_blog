@@ -177,6 +177,39 @@ a:hover {
   text-transform: uppercase;
 }
 
+.search-panel {
+  margin-top: 2rem;
+}
+
+.search-panel input {
+  background: color-mix(in oklab, var(--surface-bg) 92%, transparent);
+  border: 1px solid color-mix(in oklab, currentColor 18%, transparent);
+  border-radius: 0.5rem;
+  color: inherit;
+  font: inherit;
+  max-width: 32rem;
+  padding: 0.85rem 1rem;
+  width: 100%;
+}
+
+.search-count,
+.empty-state {
+  color: color-mix(in oklab, currentColor 62%, transparent);
+  font-size: 0.9rem;
+}
+
+.sr-only {
+  clip: rect(0 0 0 0);
+  border: 0;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .content-detail {
   margin: 0 auto;
   max-width: 48rem;

@@ -30,6 +30,7 @@ describe("i18n routing", () => {
       "写作",
       "笔记",
       "项目",
+      "搜索",
       "关于",
       "实验室",
     ]);
@@ -38,6 +39,7 @@ describe("i18n routing", () => {
       "Writing",
       "Notes",
       "Projects",
+      "Search",
       "About",
       "Playground",
     ]);

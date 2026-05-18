@@ -48,6 +48,12 @@ try {
   if (hasHorizontalOverflow) {
     throw new Error("Mobile viewport has horizontal overflow");
   }
+
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await page.goto(`${baseUrl}/en/search/`, { waitUntil: "networkidle" });
+  await page.getByRole("heading", { name: "Search" }).waitFor();
+  await page.getByRole("searchbox", { name: "Search public content" }).fill("docker");
+  await page.getByRole("heading", { name: "CI/CD Baseline" }).waitFor();
 } finally {
   await browser.close();
 }
