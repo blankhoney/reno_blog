@@ -5,6 +5,7 @@ import {
   isSupportedLanguage,
   type Language,
 } from "../lib/i18n";
+import { getThemeInitScript, getThemeOptions } from "../lib/theme";
 import { site } from "../config/site";
 import "../styles/global.css";
 
@@ -24,6 +25,8 @@ const description = Astro.props.description ?? site.description[language];
 const navigation = getNavigation(language);
 const alternateLanguage = language === "zh" ? "en" : "zh";
 const alternatePath = Astro.url.pathname.replace(`/${language}/`, `/${alternateLanguage}/`);
+const themeOptions = getThemeOptions(language);
+const themeLabel = language === "zh" ? "主题" : "Theme";
 ---
 
 <!doctype html>
@@ -33,6 +36,7 @@ const alternatePath = Astro.url.pathname.replace(`/${language}/`, `/${alternateL
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <title>{title}</title>
+    <script is:inline set:html={getThemeInitScript()} />
   </head>
   <body>
     <header class="site-header">
@@ -44,9 +48,24 @@ const alternatePath = Astro.url.pathname.replace(`/${language}/`, `/${alternateL
           ))
         }
       </nav>
-      <a class="language-toggle" href={alternatePath}>
-        {alternateLanguage === "zh" ? "中文" : "EN"}
-      </a>
+      <div class="header-actions">
+        <div class="theme-toggle" role="group" aria-label={themeLabel}>
+          {
+            themeOptions.map((option) => (
+              <button
+                aria-pressed={option.value === "system" ? "true" : "false"}
+                data-theme-option={option.value}
+                type="button"
+              >
+                {option.label}
+              </button>
+            ))
+          }
+        </div>
+        <a class="language-toggle" href={alternatePath}>
+          {alternateLanguage === "zh" ? "中文" : "EN"}
+        </a>
+      </div>
     </header>
     <main>
       <slot />
