@@ -4,14 +4,16 @@ A static, bilingual personal site built with Astro.
 
 ## Status
 
-This repository is being prepared. The first public milestone is a static site with:
+This repository contains a runnable static site with:
 
 - Chinese and English routes;
 - long-form writing;
 - short notes;
 - project case studies;
+- a Library surface for demo inventory content;
 - an about page;
-- a public experiments area;
+- a public experiments area with a bounded ProjectOrbit 3D island;
+- static search and a public content index;
 - RSS, sitemap, and basic SEO;
 - Docker packaging;
 - GitHub Actions CI/CD.
@@ -27,14 +29,17 @@ This repository is being prepared. The first public milestone is a static site w
 
 ## Development
 
-Development commands will be added once the application scaffold is committed.
-
 ```bash
+npm ci
 npm run dev
 npm run build
 npm test
 npm run lint
+npm run smoke:chrome
+npm run smoke:a11y
 ```
+
+`npm run smoke:chrome` uses the local Chrome browser. CI uses Playwright Chromium after installing the browser runtime.
 
 ## Deployment
 

@@ -39,6 +39,7 @@ const themeLabel = language === "zh" ? "主题" : "Theme";
     <script is:inline set:html={getThemeInitScript()} />
   </head>
   <body>
+    <a class="skip-link" href="#content">{language === "zh" ? "跳到正文" : "Skip to content"}</a>
     <header class="site-header">
       <a class="brand" href={`/${language}/`}>{site.name}</a>
       <nav class="site-nav" aria-label={language === "zh" ? "主导航" : "Main navigation"}>
@@ -67,7 +68,7 @@ const themeLabel = language === "zh" ? "主题" : "Theme";
         </a>
       </div>
     </header>
-    <main>
+    <main id="content" tabindex="-1">
       <slot />
     </main>
   </body>

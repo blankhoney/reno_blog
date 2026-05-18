@@ -3,11 +3,13 @@ title: "Reno Blog"
 name: "Reno Blog"
 summary: "一个静态、双语、内容优先的个人站。"
 date: 2026-05-18
+updated: 2026-05-19
 language: zh
 translationKey: reno-blog
 tags:
   - astro
   - docker
+  - personal-site
 status: published
 role: "Owner / Developer"
 techStack:
@@ -16,6 +18,39 @@ techStack:
   - Tailwind CSS
   - Docker
 featured: true
+related:
+  - writing:site-launch
+  - notes:cicd-baseline
 ---
 
-Reno Blog 是一个用于写作、笔记、项目案例和实验的长期个人站。
+## 背景
+
+Reno Blog 是 Personal Site Lab 的公开实现，用来长期承载写作、笔记、项目案例和受控实验。
+
+## 问题
+
+这个站点需要方便 agent 持续扩展，同时不能漂移成 CMS、数据库应用或运行时 AI 产品。
+
+## 目标
+
+先建立一个双语静态基础，能发布真实内容、输出结构化元数据，并为未来 AI 问答留下入口，但现在不增加后端复杂度。
+
+## 过程
+
+第一轮先完成 Astro 路由、MDX 内容集合、翻译对、测试、Docker 打包和 GitHub Actions，再继续加入更大的体验功能。
+
+## 架构
+
+Astro 从 typed content 和小型 TypeScript 数据模块生成静态页面。React 只用于隔离的 island，关键阅读和项目内容保持为 HTML。
+
+## 结果
+
+项目已经具备双语路由、公开内容发现、CI/CD、Docker 打包，并为 Reader Shell、Library、内容关系和 ProjectOrbit 留出清晰路径。
+
+## 学习
+
+静态优先让站点更容易检查和维护。主要风险不是功能不够，而是让实验性体验侵入核心阅读路径。
+
+## 链接
+
+- [公开仓库](https://github.com/blankhoney/reno_blog)

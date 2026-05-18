@@ -4,6 +4,7 @@ import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/base-layout.astro";
 import { buildContentIndex } from "../../lib/content-index";
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, isSupportedLanguage, type Language } from "../../lib/i18n";
+import { getAllLibraryItems } from "../../lib/library";
 import { filterSearchItems } from "../../lib/search";
 
 type Props = {
@@ -13,20 +14,20 @@ type Props = {
 const labels = {
   zh: {
     count: "条结果",
-    description: "按标题、摘要、标签和内容分区快速筛选公开内容。",
+    description: "按标题、摘要、标签和内容分区快速筛选公开内容与资料库条目。",
     empty: "没有匹配结果",
     eyebrow: "内容索引",
     input: "搜索公开内容",
-    placeholder: "搜索写作、笔记、项目",
+    placeholder: "搜索写作、笔记、项目、资料库",
     title: "搜索",
   },
   en: {
     count: "results",
-    description: "Filter public writing, notes, and projects by title, summary, tags, and section.",
+    description: "Filter public writing, notes, projects, and library entries by title, summary, tags, and section.",
     empty: "No matching results",
     eyebrow: "Content index",
     input: "Search public content",
-    placeholder: "Search writing, notes, projects",
+    placeholder: "Search writing, notes, projects, library",
     title: "Search",
   },
 };
@@ -49,11 +50,24 @@ const [writing, notes, projects] = await Promise.all([
   getCollection("notes"),
   getCollection("projects"),
 ]);
+const library = getAllLibraryItems().map((item) => ({
+  body: item.summary,
+  data: {
+    date: new Date(item.date),
+    language: item.language,
+    status: item.status,
+    summary: item.summary,
+    tags: item.tags,
+    title: item.title,
+    translationKey: item.key,
+  },
+}));
 const items = filterSearchItems(
   buildContentIndex([
     { section: "writing", entries: writing },
     { section: "notes", entries: notes },
     { section: "projects", entries: projects },
+    { section: "library", entries: library },
   ]),
   language,
   "",
@@ -82,7 +96,7 @@ const items = filterSearchItems(
             <article
               class="content-card"
               data-search-card
-              data-search-text={[item.title, item.summary, item.section, item.slug, ...item.tags]
+              data-search-text={[item.title, item.summary, item.excerpt, item.section, item.slug, ...item.tags, ...item.techStack]
                 .join(" ")
                 .toLowerCase()}
             >

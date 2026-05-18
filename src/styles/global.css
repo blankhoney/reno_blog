@@ -40,6 +40,10 @@ body {
   min-height: 100vh;
 }
 
+main:focus {
+  outline: none;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -58,6 +62,22 @@ a:hover {
   margin: 0 auto;
   max-width: 72rem;
   padding: 1rem clamp(1rem, 4vw, 2rem);
+}
+
+.skip-link {
+  background: var(--page-color);
+  border-radius: 0 0 0.5rem 0;
+  color: var(--page-bg);
+  left: 0;
+  padding: 0.7rem 1rem;
+  position: fixed;
+  top: 0;
+  transform: translateY(-120%);
+  z-index: 20;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
 }
 
 .brand {
@@ -136,7 +156,7 @@ a:hover {
 }
 
 .eyebrow {
-  color: color-mix(in oklab, currentColor 58%, transparent);
+  color: color-mix(in oklab, currentColor 76%, transparent);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -177,6 +197,37 @@ a:hover {
   text-transform: uppercase;
 }
 
+.library-groups {
+  display: grid;
+  gap: clamp(2rem, 6vw, 4rem);
+  margin-top: 3rem;
+}
+
+.library-group {
+  display: grid;
+  gap: 1rem;
+}
+
+.library-group-header h2 {
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  margin: 0;
+}
+
+.library-group-header p {
+  margin-bottom: 0;
+}
+
+.library-item h3 {
+  font-size: 1.05rem;
+  margin: 0.4rem 0 0;
+}
+
+.text-link {
+  display: inline-flex;
+  font-weight: 700;
+  margin-top: 1rem;
+}
+
 .search-panel {
   margin-top: 2rem;
 }
@@ -210,7 +261,9 @@ a:hover {
   width: 1px;
 }
 
-.content-detail {
+.content-detail,
+.reader-shell,
+.case-study-shell {
   margin: 0 auto;
   max-width: 48rem;
   padding: clamp(3rem, 8vw, 6rem) clamp(1rem, 4vw, 2rem);
@@ -229,10 +282,95 @@ a:hover {
   padding: 0.5rem 0.75rem;
 }
 
-.content-detail h1 {
+.content-detail h1,
+.reader-shell h1,
+.case-study-shell h1 {
   font-size: clamp(2.25rem, 6vw, 4.5rem);
   line-height: 1;
   margin: 0;
+}
+
+.reader-header {
+  display: grid;
+  gap: 1rem;
+}
+
+.case-study-header {
+  display: grid;
+  gap: 1rem;
+}
+
+.case-study-role {
+  color: color-mix(in oklab, currentColor 70%, transparent);
+  font-weight: 700;
+  margin: 0;
+}
+
+.muted-tags span {
+  color: color-mix(in oklab, currentColor 58%, transparent);
+}
+
+.reader-meta {
+  color: color-mix(in oklab, currentColor 66%, transparent);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0;
+}
+
+.reader-meta div {
+  align-items: baseline;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.reader-meta dt {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.reader-meta dd {
+  margin: 0;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag-list span {
+  border: 1px solid color-mix(in oklab, currentColor 14%, transparent);
+  border-radius: 999px;
+  color: color-mix(in oklab, currentColor 72%, transparent);
+  font-size: 0.82rem;
+  padding: 0.3rem 0.55rem;
+}
+
+.reader-toc {
+  border-block: 1px solid color-mix(in oklab, currentColor 14%, transparent);
+  margin-top: 2rem;
+  padding: 1rem 0;
+}
+
+.reader-toc p {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+}
+
+.reader-toc ol {
+  display: grid;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.reader-toc .toc-depth-3 {
+  padding-left: 1rem;
 }
 
 .lead {
@@ -246,4 +384,138 @@ a:hover {
   line-height: 1.8;
   margin-top: 2rem;
   padding-top: 2rem;
+}
+
+.reader-toc + .prose {
+  border-top: 0;
+  margin-top: 0;
+}
+
+.prose :is(h2, h3, h4) {
+  scroll-margin-top: 5rem;
+}
+
+.prose :is(pre, code) {
+  background: color-mix(in oklab, currentColor 8%, transparent);
+  border-radius: 0.4rem;
+}
+
+.prose code {
+  font-size: 0.92em;
+  padding: 0.1rem 0.25rem;
+}
+
+.prose pre {
+  overflow-x: auto;
+  padding: 1rem;
+}
+
+.prose pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.prose .breakout,
+.prose figure {
+  margin-left: clamp(-8rem, -12vw, -1rem);
+  margin-right: clamp(-8rem, -12vw, -1rem);
+  max-width: calc(100% + 16rem);
+}
+
+.reader-demo-slot:empty {
+  display: none;
+}
+
+.reader-demo-slot {
+  margin-top: 2rem;
+}
+
+.reader-footer {
+  border-top: 1px solid color-mix(in oklab, currentColor 14%, transparent);
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  margin-top: 3rem;
+  padding-top: 1.25rem;
+}
+
+.reader-footer a {
+  border: 1px solid color-mix(in oklab, currentColor 14%, transparent);
+  border-radius: 0.5rem;
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+}
+
+.reader-footer span {
+  color: color-mix(in oklab, currentColor 74%, transparent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.related-content {
+  border-top: 1px solid color-mix(in oklab, currentColor 14%, transparent);
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+}
+
+.related-content h2 {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.related-content h3 {
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.project-orbit-section {
+  border-top: 1px solid color-mix(in oklab, currentColor 14%, transparent);
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 3rem;
+  padding-top: 2rem;
+}
+
+.project-orbit-canvas {
+  aspect-ratio: 16 / 9;
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--surface-bg) 84%, transparent), transparent),
+    color-mix(in oklab, var(--surface-bg) 82%, currentColor 4%);
+  border: 1px solid color-mix(in oklab, currentColor 14%, transparent);
+  border-radius: 0.5rem;
+  min-height: 22rem;
+  overflow: hidden;
+}
+
+.project-orbit-canvas canvas {
+  display: block;
+}
+
+.orbit-fallback {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+}
+
+.orbit-fallback a {
+  border: 1px solid color-mix(in oklab, currentColor 14%, transparent);
+  border-radius: 0.5rem;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem;
+}
+
+.orbit-fallback span {
+  color: color-mix(in oklab, currentColor 74%, transparent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+@media (max-width: 700px), (prefers-reduced-motion: reduce) {
+  .project-orbit-canvas {
+    display: none;
+  }
 }

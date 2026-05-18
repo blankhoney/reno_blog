@@ -1,0 +1,86 @@
+---
+import type { ContentIndexItem } from "../lib/content-index";
+import type { Language } from "../lib/i18n";
+import type { SectionNavigation } from "../lib/sections";
+
+type Props = {
+  language: Language;
+  name: string;
+  relatedItems?: ContentIndexItem[];
+  role?: string;
+  sectionNavigation: SectionNavigation;
+  summary?: string;
+  tags?: string[];
+  techStack?: string[];
+};
+
+const {
+  language,
+  name,
+  relatedItems = [],
+  role,
+  sectionNavigation,
+  summary,
+  tags = [],
+  techStack = [],
+} = Astro.props;
+const breadcrumbLabel = language === "zh" ? "内容位置" : "Content location";
+const techLabel = language === "zh" ? "技术栈" : "Tech stack";
+const tagsLabel = language === "zh" ? "标签" : "Tags";
+const relatedLabel = language === "zh" ? "相关内容" : "Related content";
+---
+
+<article class="case-study-shell">
+  <nav class="breadcrumb" aria-label={breadcrumbLabel}>
+    <a href={sectionNavigation.href}>{sectionNavigation.returnLabel}</a>
+  </nav>
+
+  <header class="case-study-header">
+    <p class="eyebrow">{sectionNavigation.label}</p>
+    <h1>{name}</h1>
+    {summary && <p class="lead">{summary}</p>}
+    {role && <p class="case-study-role">{role}</p>}
+    {
+      techStack.length > 0 && (
+        <div class="tag-list" aria-label={techLabel}>
+          {techStack.map((tech) => (
+            <span>{tech}</span>
+          ))}
+        </div>
+      )
+    }
+    {
+      tags.length > 0 && (
+        <div class="tag-list muted-tags" aria-label={tagsLabel}>
+          {tags.map((tag) => (
+            <span>{tag}</span>
+          ))}
+        </div>
+      )
+    }
+  </header>
+
+  <div class="prose case-study-body">
+    <slot />
+  </div>
+
+  {
+    relatedItems.length > 0 && (
+      <aside class="related-content" aria-labelledby="related-content-title">
+        <h2 id="related-content-title">{relatedLabel}</h2>
+        <div class="content-list compact">
+          {relatedItems.map((item) => (
+            <article class="content-card">
+              <p class="meta">{item.section} / {item.date}</p>
+              <h3>
+                <a href={item.url}>{item.title}</a>
+              </h3>
+              <p>{item.summary || item.excerpt}</p>
+            </article>
+          ))}
+        </div>
+      </aside>
+    )
+  }
+</article>
+

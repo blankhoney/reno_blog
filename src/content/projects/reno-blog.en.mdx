@@ -3,11 +3,13 @@ title: "Reno Blog"
 name: "Reno Blog"
 summary: "A static, bilingual, content-first personal site."
 date: 2026-05-18
+updated: 2026-05-19
 language: en
 translationKey: reno-blog
 tags:
   - astro
   - docker
+  - personal-site
 status: published
 role: "Owner / Developer"
 techStack:
@@ -16,6 +18,39 @@ techStack:
   - Tailwind CSS
   - Docker
 featured: true
+related:
+  - writing:site-launch
+  - notes:cicd-baseline
 ---
 
-Reno Blog is a long-term personal site for writing, notes, project case studies, and experiments.
+## Context
+
+Reno Blog is the public implementation of Personal Site Lab, a long-lived personal interface for writing, notes, project case studies, and controlled experiments.
+
+## Problem
+
+The site needs to stay easy for an agent to extend without drifting into a CMS, database-backed app, or runtime AI product.
+
+## Goal
+
+Build a bilingual static foundation that can publish real content, expose structured metadata, and leave room for future AI Q&A without adding backend complexity now.
+
+## Process
+
+The first iteration established Astro routes, MDX content collections, translation pairs, tests, Docker packaging, and GitHub Actions before adding larger experience work.
+
+## Architecture
+
+Astro renders static pages from typed content and small TypeScript data modules. React is reserved for isolated islands, while important reading and project content remains available as HTML.
+
+## Outcome
+
+The project now has bilingual routes, public content discovery, CI/CD, Docker packaging, and a clear path for Reader Shell, Library, content relations, and ProjectOrbit.
+
+## Learnings
+
+Static-first architecture keeps the site inspectable. The main risk is not missing features, but allowing experiments to leak into the core reading experience.
+
+## Links
+
+- [Public repository](https://github.com/blankhoney/reno_blog)

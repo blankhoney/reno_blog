@@ -1,6 +1,10 @@
 ---
 import BaseLayout from "../../../layouts/base-layout.astro";
 import { getCollection, render, type CollectionEntry } from "astro:content";
+import ProjectCaseStudy from "../../../components/ProjectCaseStudy.astro";
+import { buildContentIndex } from "../../../lib/content-index";
+import { getAllLibraryItems } from "../../../lib/library";
+import { getRelatedContent } from "../../../lib/relations";
 import { getSectionNavigation } from "../../../lib/sections";
 
 type Props = {
@@ -22,7 +26,36 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { Content } = await render(entry);
 const sectionNavigation = getSectionNavigation(entry.data.language, "projects");
-const breadcrumbLabel = entry.data.language === "zh" ? "内容位置" : "Content location";
+const [writing, notes, projects] = await Promise.all([
+  getCollection("writing"),
+  getCollection("notes"),
+  getCollection("projects"),
+]);
+const library = getAllLibraryItems().map((item) => ({
+  body: item.summary,
+  data: {
+    date: new Date(item.date),
+    language: item.language,
+    status: item.status,
+    summary: item.summary,
+    tags: item.tags,
+    title: item.title,
+    translationKey: item.key,
+  },
+}));
+const contentIndex = buildContentIndex([
+  { section: "writing", entries: writing },
+  { section: "notes", entries: notes },
+  { section: "projects", entries: projects },
+  { section: "library", entries: library },
+]);
+const relatedItems = getRelatedContent(
+  contentIndex.map((item) => ({
+    ...item,
+    related: item.relationKeys,
+  })),
+  `projects:${entry.data.translationKey}`,
+);
 ---
 
 <BaseLayout
@@ -30,20 +63,16 @@ const breadcrumbLabel = entry.data.language === "zh" ? "内容位置" : "Content
   title={entry.data.name}
   description={entry.data.summary}
 >
-  <article class="content-detail project-detail">
-    <nav class="breadcrumb" aria-label={breadcrumbLabel}>
-      <a href={sectionNavigation.href}>{sectionNavigation.returnLabel}</a>
-    </nav>
-    <p class="eyebrow">{entry.data.role}</p>
-    <h1>{entry.data.name}</h1>
-    {entry.data.summary && <p class="lead">{entry.data.summary}</p>}
-    {
-      entry.data.techStack.length > 0 && (
-        <p class="meta">{entry.data.techStack.join(" / ")}</p>
-      )
-    }
-    <div class="prose">
-      <Content />
-    </div>
-  </article>
+  <ProjectCaseStudy
+    language={entry.data.language}
+    name={entry.data.name}
+    relatedItems={relatedItems}
+    role={entry.data.role}
+    sectionNavigation={sectionNavigation}
+    summary={entry.data.summary}
+    tags={entry.data.tags}
+    techStack={entry.data.techStack}
+  >
+    <Content />
+  </ProjectCaseStudy>
 </BaseLayout>

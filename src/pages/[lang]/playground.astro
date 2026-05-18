@@ -1,6 +1,11 @@
 ---
 import BaseLayout from "../../layouts/base-layout.astro";
+import { getCollection } from "astro:content";
+import ProjectOrbit from "../../components/ProjectOrbit";
+import { buildContentIndex } from "../../lib/content-index";
 import { SUPPORTED_LANGUAGES, type Language } from "../../lib/i18n";
+import { getAllLibraryItems } from "../../lib/library";
+import { buildProjectOrbitGraph } from "../../lib/project-orbit";
 
 export function getStaticPaths() {
   return SUPPORTED_LANGUAGES.map((language) => ({ params: { lang: language } }));
@@ -8,9 +13,43 @@ export function getStaticPaths() {
 
 const language = Astro.params.lang as Language;
 const copy = {
-  zh: { title: "实验室", body: "这里是公开但明确标记的视觉和交互实验区。" },
-  en: { title: "Playground", body: "A public, clearly marked space for visual and interaction experiments." },
+  zh: {
+    title: "实验室",
+    body: "这里是公开但明确标记的视觉和交互实验区。",
+    orbit: "ProjectOrbit",
+    orbitBody: "静态内容关系图。Canvas 只是增强层，下面的链接列表保留完整内容。",
+  },
+  en: {
+    title: "Playground",
+    body: "A public, clearly marked space for visual and interaction experiments.",
+    orbit: "ProjectOrbit",
+    orbitBody: "A static content relationship graph. The canvas is an enhancement; the link list keeps the full content available.",
+  },
 }[language];
+const [writing, notes, projects] = await Promise.all([
+  getCollection("writing"),
+  getCollection("notes"),
+  getCollection("projects"),
+]);
+const library = getAllLibraryItems().map((item) => ({
+  body: item.summary,
+  data: {
+    date: new Date(item.date),
+    language: item.language,
+    status: item.status,
+    summary: item.summary,
+    tags: item.tags,
+    title: item.title,
+    translationKey: item.key,
+  },
+}));
+const contentIndex = buildContentIndex([
+  { section: "writing", entries: writing },
+  { section: "notes", entries: notes },
+  { section: "projects", entries: projects },
+  { section: "library", entries: library },
+]);
+const graph = buildProjectOrbitGraph(contentIndex, language);
 ---
 
 <BaseLayout language={language} title={copy.title}>
@@ -18,5 +57,23 @@ const copy = {
     <p class="eyebrow">{language === "zh" ? "实验区" : "Experiments"}</p>
     <h1>{copy.title}</h1>
     <p>{copy.body}</p>
+
+    <section class="project-orbit-section" aria-labelledby="project-orbit-title">
+      <div class="library-group-header">
+        <h2 id="project-orbit-title">{copy.orbit}</h2>
+        <p>{copy.orbitBody}</p>
+      </div>
+      <ProjectOrbit client:visible graph={graph} language={language} />
+      <div class="orbit-fallback">
+        {
+          graph.nodes.map((node) => (
+            <a href={node.url}>
+              <span>{node.section}</span>
+              {node.title}
+            </a>
+          ))
+        }
+      </div>
+    </section>
   </section>
 </BaseLayout>

@@ -13,6 +13,7 @@ const bilingualBaseSchema = z.object({
   status: z.enum(["draft", "published"]).default("draft"),
   featured: z.boolean().default(false),
   cover: z.string().optional(),
+  related: z.array(z.string()).default([]),
 });
 
 const writing = defineCollection({
