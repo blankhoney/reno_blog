@@ -1,0 +1,22 @@
+---
+import BaseLayout from "../../layouts/base-layout.astro";
+import { SUPPORTED_LANGUAGES, type Language } from "../../lib/i18n";
+
+export function getStaticPaths() {
+  return SUPPORTED_LANGUAGES.map((language) => ({ params: { lang: language } }));
+}
+
+const language = Astro.params.lang as Language;
+const copy = {
+  zh: { title: "实验室", body: "这里是公开但明确标记的视觉和交互实验区。" },
+  en: { title: "Playground", body: "A public, clearly marked space for visual and interaction experiments." },
+}[language];
+---
+
+<BaseLayout language={language} title={copy.title}>
+  <section class="page-section">
+    <p class="eyebrow">{language === "zh" ? "实验区" : "Experiments"}</p>
+    <h1>{copy.title}</h1>
+    <p>{copy.body}</p>
+  </section>
+</BaseLayout>

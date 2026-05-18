@@ -1,0 +1,55 @@
+---
+import {
+  DEFAULT_LANGUAGE,
+  getNavigation,
+  isSupportedLanguage,
+  type Language,
+} from "../lib/i18n";
+import { site } from "../config/site";
+import "../styles/global.css";
+
+type Props = {
+  title?: string;
+  description?: string;
+  language?: string;
+};
+
+const requestedLanguage = Astro.props.language;
+const language: Language =
+  requestedLanguage && isSupportedLanguage(requestedLanguage)
+    ? requestedLanguage
+    : DEFAULT_LANGUAGE;
+const title = Astro.props.title ? `${Astro.props.title} | ${site.name}` : site.name;
+const description = Astro.props.description ?? site.description[language];
+const navigation = getNavigation(language);
+const alternateLanguage = language === "zh" ? "en" : "zh";
+const alternatePath = Astro.url.pathname.replace(`/${language}/`, `/${alternateLanguage}/`);
+---
+
+<!doctype html>
+<html lang={language}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href={`/${language}/`}>{site.name}</a>
+      <nav class="site-nav" aria-label={language === "zh" ? "主导航" : "Main navigation"}>
+        {
+          navigation.map((item) => (
+            <a href={item.href}>{item.label}</a>
+          ))
+        }
+      </nav>
+      <a class="language-toggle" href={alternatePath}>
+        {alternateLanguage === "zh" ? "中文" : "EN"}
+      </a>
+    </header>
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>

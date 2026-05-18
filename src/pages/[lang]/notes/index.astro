@@ -1,0 +1,21 @@
+---
+import BaseLayout from "../../../layouts/base-layout.astro";
+import { SUPPORTED_LANGUAGES, type Language } from "../../../lib/i18n";
+
+export function getStaticPaths() {
+  return SUPPORTED_LANGUAGES.map((language) => ({ params: { lang: language } }));
+}
+
+const language = Astro.params.lang as Language;
+const copy = {
+  zh: { title: "笔记", body: "短记录、概念卡片、命令笔记和问题清单会放在这里。" },
+  en: { title: "Notes", body: "Short records, concept cards, command notes, and question lists will live here." },
+}[language];
+---
+
+<BaseLayout language={language} title={copy.title}>
+  <section class="page-section">
+    <h1>{copy.title}</h1>
+    <p>{copy.body}</p>
+  </section>
+</BaseLayout>

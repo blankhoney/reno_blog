@@ -1,0 +1,31 @@
+{
+  "name": "reno-blog",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "npm run test && astro check",
+    "smoke:chrome": "node scripts/smoke-chrome.mjs"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@astrojs/mdx": "^5.0.6",
+    "@astrojs/react": "^5.0.5",
+    "@astrojs/sitemap": "^3.7.2",
+    "@tailwindcss/postcss": "^4.3.0",
+    "astro": "^6.3.5",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.6"
+  },
+  "devDependencies": {
+    "playwright": "^1.60.0"
+  }
+}
