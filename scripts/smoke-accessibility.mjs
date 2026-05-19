@@ -7,6 +7,10 @@ const seriousImpacts = new Set(["serious", "critical"]);
 const paths = [
   "/zh/",
   "/en/",
+  "/zh/now/",
+  "/en/writing/",
+  "/en/notes/",
+  "/en/projects/",
   "/zh/library/",
   "/en/playground/",
   "/zh/search/",

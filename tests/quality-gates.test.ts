@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 const packageJson = JSON.parse(readFileSync("package.json", "utf8")) as {
   scripts: Record<string, string>;
 };
+const astroConfig = readFileSync("astro.config.mjs", "utf8");
 const ciWorkflow = readFileSync(".github/workflows/ci.yml", "utf8");
 
 describe("quality gates", () => {
@@ -20,5 +21,10 @@ describe("quality gates", () => {
     expect(ciWorkflow).toContain("npm run smoke:ci");
     expect(ciWorkflow).toContain("npm run smoke:a11y");
   });
-});
 
+  it("keeps heavy 3D dependencies isolated from the main route chunk", () => {
+    expect(astroConfig).toContain("manualChunks");
+    expect(astroConfig).toContain("three-vendor");
+    expect(astroConfig).toContain("react-three-vendor");
+  });
+});

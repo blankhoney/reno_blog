@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   LIBRARY_SURFACES,
+  getLibraryItemsForSurface,
   getLibrarySurfaceGroups,
 } from "../src/lib/library";
 import { SUPPORTED_LANGUAGES } from "../src/lib/i18n";
@@ -21,5 +22,15 @@ describe("library hub data", () => {
       }
     }
   });
-});
 
+  it("exposes Now as an independent bilingual surface source", () => {
+    expect(getLibraryItemsForSurface("zh", "now").map((item) => item.surface)).toEqual([
+      "now",
+      "now",
+      "now",
+    ]);
+    expect(getLibraryItemsForSurface("en", "now").map((item) => item.title)).toContain(
+      "Q&A preparation",
+    );
+  });
+});

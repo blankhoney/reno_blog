@@ -1,0 +1,90 @@
+---
+import BaseLayout from "../../layouts/base-layout.astro";
+import { getActionCards } from "../../lib/dashboard";
+import { SUPPORTED_LANGUAGES, type Language } from "../../lib/i18n";
+import { getLibraryItemsForSurface } from "../../lib/library";
+
+export function getStaticPaths() {
+  return SUPPORTED_LANGUAGES.map((language) => ({ params: { lang: language } }));
+}
+
+const language = Astro.params.lang as Language;
+const copy = {
+  zh: {
+    actions: "动作",
+    body: "这里记录当前重点、正在推进和暂时搁置的方向。内容保持静态、可分享，不需要账号状态。",
+    title: "Now",
+  },
+  en: {
+    actions: "Actions",
+    body: "A static, shareable view of current focus areas, active work, and parked threads without account state.",
+    title: "Now",
+  },
+}[language];
+const items = getLibraryItemsForSurface(language, "now");
+const actionCards = getActionCards(language);
+---
+
+<BaseLayout language={language} title={copy.title}>
+  <section class="page-section now-surface">
+    <p class="eyebrow">{copy.title}</p>
+    <h1>{copy.title}</h1>
+    <p>{copy.body}</p>
+
+    <div class="now-grid" data-motion-stagger>
+      {
+        items.map((item) => (
+          <article class="now-item">
+            <time datetime={item.date}>{item.date}</time>
+            <h2>{item.title}</h2>
+            <p>{item.summary}</p>
+            <div class="tag-list" aria-label={language === "zh" ? "标签" : "Tags"}>
+              {item.tags.map((tag) => (
+                <span>{tag}</span>
+              ))}
+            </div>
+          </article>
+        ))
+      }
+    </div>
+
+    <div class="action-grid" aria-label={copy.actions}>
+      {
+        actionCards.map((card) =>
+          card.kind === "email" ? (
+            <button
+              class="action-card"
+              data-copy-value={card.value}
+              data-copy-label={card.title}
+              type="button"
+            >
+              <span>{card.title}</span>
+              <small>{card.body}</small>
+            </button>
+          ) : (
+            <a class="action-card" href={card.href} rel={card.kind === "github" ? "noreferrer" : undefined} target={card.kind === "github" ? "_blank" : undefined}>
+              <span>{card.title}</span>
+              <small>{card.body}</small>
+            </a>
+          ),
+        )
+      }
+    </div>
+  </section>
+
+  <script is:inline>
+    (() => {
+      document.querySelectorAll("[data-copy-value]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const value = button.getAttribute("data-copy-value");
+          if (!value) {
+            return;
+          }
+
+          await navigator.clipboard?.writeText(value);
+          button.setAttribute("data-copied", "true");
+        });
+      });
+    })();
+  </script>
+</BaseLayout>

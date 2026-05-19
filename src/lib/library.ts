@@ -421,6 +421,13 @@ export function getAllLibraryItems(): LibraryItem[] {
   return libraryItems.filter((item) => item.status === "published");
 }
 
+export function getLibraryItemsForSurface(
+  language: Language,
+  surface: LibrarySurfaceId,
+): LibraryItem[] {
+  return getLibraryItems(language).filter((item) => item.surface === surface);
+}
+
 export function getLibrarySurfaceGroups(language: Language): LibrarySurfaceGroup[] {
   const items = getLibraryItems(language);
 

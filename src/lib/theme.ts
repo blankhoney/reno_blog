@@ -86,6 +86,14 @@ export function getThemeInitScript(): string {
     updateControls(normalized);
   }
 
+  function applyThemeToDocument(targetDocument, preference) {
+    const normalized = normalize(preference);
+    const resolved = resolvePreference(normalized);
+    targetDocument.documentElement.dataset.theme = resolved;
+    targetDocument.documentElement.dataset.themePreference = normalized;
+    targetDocument.documentElement.style.colorScheme = resolved;
+  }
+
   function setTheme(preference) {
     const normalized = normalize(preference);
 
@@ -100,6 +108,14 @@ export function getThemeInitScript(): string {
   applyTheme(readPreference());
 
   document.addEventListener("DOMContentLoaded", () => {
+    applyTheme(readPreference());
+  });
+
+  document.addEventListener("astro:before-swap", (event) => {
+    applyThemeToDocument(event.newDocument, readPreference());
+  });
+
+  document.addEventListener("astro:after-swap", () => {
     applyTheme(readPreference());
   });
 

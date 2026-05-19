@@ -1,10 +1,17 @@
 ---
+import { ClientRouter } from "astro:transitions";
+import { getCollection } from "astro:content";
+import CommandPalette from "../components/CommandPalette.astro";
 import {
   DEFAULT_LANGUAGE,
   getNavigation,
   isSupportedLanguage,
   type Language,
 } from "../lib/i18n";
+import { buildCommandPaletteItems } from "../lib/command-palette";
+import { buildContentIndex } from "../lib/content-index";
+import { getAllLibraryItems } from "../lib/library";
+import { getMotionInitScript } from "../lib/motion";
 import { getThemeInitScript, getThemeOptions } from "../lib/theme";
 import { site } from "../config/site";
 import "../styles/global.css";
@@ -24,19 +31,50 @@ const title = Astro.props.title ? `${Astro.props.title} | ${site.name}` : site.n
 const description = Astro.props.description ?? site.description[language];
 const navigation = getNavigation(language);
 const alternateLanguage = language === "zh" ? "en" : "zh";
-const alternatePath = Astro.url.pathname.replace(`/${language}/`, `/${alternateLanguage}/`);
+const alternatePath = Astro.url.pathname.replace(
+  new RegExp(`^/${language}(?=/|$)`),
+  `/${alternateLanguage}`,
+);
 const themeOptions = getThemeOptions(language);
 const themeLabel = language === "zh" ? "主题" : "Theme";
+const [writing, notes, projects] = await Promise.all([
+  getCollection("writing"),
+  getCollection("notes"),
+  getCollection("projects"),
+]);
+const library = getAllLibraryItems().map((item) => ({
+  body: item.summary,
+  data: {
+    date: new Date(item.date),
+    language: item.language,
+    status: item.status,
+    summary: item.summary,
+    tags: item.tags,
+    title: item.title,
+    translationKey: item.key,
+  },
+}));
+const commandItems = buildCommandPaletteItems(
+  language,
+  buildContentIndex([
+    { section: "writing", entries: writing },
+    { section: "notes", entries: notes },
+    { section: "projects", entries: projects },
+    { section: "library", entries: library },
+  ]),
+);
 ---
 
 <!doctype html>
-<html lang={language}>
+<html lang={language} transition:name="root" transition:animate="fade">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <title>{title}</title>
     <script is:inline set:html={getThemeInitScript()} />
+    <script is:inline set:html={getMotionInitScript()} />
+    <ClientRouter />
   </head>
   <body>
     <a class="skip-link" href="#content">{language === "zh" ? "跳到正文" : "Skip to content"}</a>
@@ -66,9 +104,10 @@ const themeLabel = language === "zh" ? "主题" : "Theme";
         <a class="language-toggle" href={alternatePath}>
           {alternateLanguage === "zh" ? "中文" : "EN"}
         </a>
+        <CommandPalette commands={commandItems} language={language} />
       </div>
     </header>
-    <main id="content" tabindex="-1">
+    <main id="content" tabindex="-1" transition:animate="slide">
       <slot />
     </main>
   </body>

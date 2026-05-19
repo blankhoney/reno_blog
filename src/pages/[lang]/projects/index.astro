@@ -1,7 +1,9 @@
 ---
-import BaseLayout from "../../../layouts/base-layout.astro";
 import { getCollection } from "astro:content";
-import { getPublishedEntriesForLanguage } from "../../../lib/content";
+
+import BaseLayout from "../../../layouts/base-layout.astro";
+import { buildContentIndex } from "../../../lib/content-index";
+import { buildProjectEvidenceCards } from "../../../lib/dashboard";
 import { SUPPORTED_LANGUAGES, type Language } from "../../../lib/i18n";
 
 export function getStaticPaths() {
@@ -10,33 +12,67 @@ export function getStaticPaths() {
 
 const language = Astro.params.lang as Language;
 const copy = {
-  zh: { title: "项目", body: "作品集友好的技术案例会整理在这里。" },
-  en: { title: "Projects", body: "Portfolio-friendly technical case studies will live here." },
+  zh: {
+    body: "每个项目都优先展示结果、验证证据和可追溯内容，而不是只放截图。",
+    evidence: "证据",
+    link: "查看案例",
+    title: "项目",
+    verification: "验证",
+  },
+  en: {
+    body: "Each project prioritizes outcomes, verification evidence, and traceable content instead of screenshot-only tiles.",
+    evidence: "Evidence",
+    link: "View case study",
+    title: "Projects",
+    verification: "Verification",
+  },
 }[language];
-const entries = getPublishedEntriesForLanguage(
-  (await getCollection("projects")).map((entry) => ({
-    ...entry,
-    slug: entry.data.translationKey,
-  })),
-  language,
-);
+const [writing, notes, projects] = await Promise.all([
+  getCollection("writing"),
+  getCollection("notes"),
+  getCollection("projects"),
+]);
+const contentIndex = buildContentIndex([
+  { section: "writing", entries: writing },
+  { section: "notes", entries: notes },
+  { section: "projects", entries: projects },
+]);
+const cards = buildProjectEvidenceCards(contentIndex, language);
 ---
 
 <BaseLayout language={language} title={copy.title}>
-  <section class="page-section">
+  <section class="page-section evidence-page">
+    <p class="eyebrow">{copy.evidence}</p>
     <h1>{copy.title}</h1>
     <p>{copy.body}</p>
-    <div class="content-list">
+    <div class="evidence-grid" data-motion-stagger>
       {
-        entries.map((entry) => (
-          <article class="content-card">
-            <a href={`/${language}/projects/${entry.slug}/`}>
-              <h2>{entry.data.name}</h2>
-              {entry.data.summary && <p>{entry.data.summary}</p>}
-              {entry.data.techStack.length > 0 && (
-                <p class="meta">{entry.data.techStack.join(" / ")}</p>
-              )}
-            </a>
+        cards.map((card) => (
+          <article class="evidence-card">
+            <p class="eyebrow">{copy.evidence}</p>
+            <h2>{card.title}</h2>
+            <p>{card.outcome}</p>
+            <div class="tag-list" aria-label={language === "zh" ? "技术栈" : "Tech stack"}>
+              {card.techStack.map((tech) => (
+                <span>{tech}</span>
+              ))}
+            </div>
+            <dl class="evidence-list" aria-label={copy.verification}>
+              {card.verification.map((item) => (
+                <div>
+                  <dt>{item.label}</dt>
+                  <dd>{item.value}</dd>
+                </div>
+              ))}
+            </dl>
+            {card.evidenceLinks.length > 0 && (
+              <div class="related-mini">
+                {card.evidenceLinks.map((item) => (
+                  <a href={item.url}>{item.title}</a>
+                ))}
+              </div>
+            )}
+            <a class="text-link" href={card.url}>{copy.link}</a>
           </article>
         ))
       }

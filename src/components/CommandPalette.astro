@@ -1,0 +1,255 @@
+---
+import type { CommandPaletteItem } from "../lib/command-palette";
+import type { Language } from "../lib/i18n";
+
+type Props = {
+  commands: CommandPaletteItem[];
+  language: Language;
+};
+
+const { commands, language } = Astro.props;
+const copy = {
+  zh: {
+    close: "关闭",
+    empty: "没有匹配命令",
+    label: "命令面板",
+    placeholder: "输入页面、内容或动作",
+    status: "命令状态",
+    trigger: "命令",
+  },
+  en: {
+    close: "Close",
+    empty: "No matching commands",
+    label: "Command palette",
+    placeholder: "Type a page, content, or action",
+    status: "Command status",
+    trigger: "Command",
+  },
+}[language];
+---
+
+<button
+  aria-controls="command-palette"
+  aria-haspopup="dialog"
+  aria-keyshortcuts="Control+K Meta+K"
+  class="command-trigger"
+  data-command-trigger
+  type="button"
+>
+  <span aria-hidden="true">⌘K</span>
+  <span>{copy.trigger}</span>
+</button>
+
+<div class="command-palette" data-command-palette hidden>
+  <div class="command-dialog" id="command-palette" role="dialog" aria-modal="true" aria-label={copy.label}>
+    <div class="command-search-row">
+      <label class="sr-only" for="command-search">{copy.label}</label>
+      <input
+        autocomplete="off"
+        data-command-input
+        id="command-search"
+        placeholder={copy.placeholder}
+        type="search"
+      />
+      <button class="command-close" data-command-close type="button">{copy.close}</button>
+    </div>
+    <div class="command-results" data-command-results role="listbox"></div>
+    <p class="command-empty" data-command-empty hidden>{copy.empty}</p>
+    <p class="sr-only" aria-live="polite" data-command-status>{copy.status}</p>
+  </div>
+</div>
+
+<script is:inline type="application/json" id={`command-palette-data-${language}`} set:html={JSON.stringify(commands)} />
+
+<script is:inline>
+  (() => {
+    function readCommands() {
+      const language = document.documentElement.lang || "zh";
+      const source = document.getElementById(`command-palette-data-${language}`);
+
+      try {
+        return JSON.parse(source?.textContent || "[]");
+      } catch {
+        return [];
+      }
+    }
+
+    function getElements() {
+      const root = document.querySelector("[data-command-palette]");
+      return {
+        empty: root?.querySelector("[data-command-empty]"),
+        input: root?.querySelector("[data-command-input]"),
+        results: root?.querySelector("[data-command-results]"),
+        root,
+        status: root?.querySelector("[data-command-status]"),
+        trigger: document.querySelector("[data-command-trigger]"),
+      };
+    }
+
+    function matchesCommand(command, query) {
+      if (!query) {
+        return true;
+      }
+
+      const haystack = [
+        command.label,
+        command.description,
+        command.href,
+        command.value,
+        ...(command.keywords || []),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(query);
+    }
+
+    function renderCommands() {
+      const { empty, input, results } = getElements();
+      const query = input?.value.trim().toLowerCase() || "";
+      const visible = readCommands().filter((command) => matchesCommand(command, query)).slice(0, 10);
+
+      if (!results) {
+        return;
+      }
+
+      results.replaceChildren();
+      visible.forEach((command, index) => {
+        const button = document.createElement("button");
+        const label = document.createElement("span");
+        const description = document.createElement("small");
+
+        button.className = "command-item";
+        button.setAttribute("data-command-id", command.id);
+        button.setAttribute("role", "option");
+        button.type = "button";
+
+        if (index === 0) {
+          button.setAttribute("data-command-first", "true");
+        }
+
+        label.textContent = command.label;
+        description.textContent = command.description;
+        button.append(label, description);
+        results.append(button);
+      });
+
+      if (empty) {
+        empty.hidden = visible.length > 0;
+      }
+    }
+
+    async function executeCommand(commandId) {
+      const command = readCommands().find((item) => item.id === commandId);
+      const { root, status, trigger } = getElements();
+
+      if (!command) {
+        return;
+      }
+
+      if (command.action === "copy" && command.value) {
+        await navigator.clipboard?.writeText(command.value);
+        if (status) {
+          status.textContent = command.label;
+        }
+      } else if (command.href) {
+        if (command.action === "external") {
+          window.open(command.href, "_blank", "noopener,noreferrer");
+        } else {
+          window.location.href = command.href;
+        }
+      }
+
+      root.hidden = true;
+      trigger?.focus();
+    }
+
+    function openPalette() {
+      const { input, root } = getElements();
+
+      if (!root || !input) {
+        return;
+      }
+
+      root.hidden = false;
+      input.value = "";
+      renderCommands();
+      requestAnimationFrame(() => input.focus());
+    }
+
+    function closePalette() {
+      const { root, trigger } = getElements();
+
+      if (root) {
+        root.hidden = true;
+      }
+
+      trigger?.focus();
+    }
+
+    function keepFocusInDialog(event) {
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const { root } = getElements();
+      const focusable = Array.from(
+        root?.querySelectorAll("button, input, a, [tabindex]:not([tabindex='-1'])") ?? [],
+      ).filter((element) => !element.disabled && element.getAttribute("aria-hidden") !== "true");
+      const first = focusable[0];
+      const last = focusable.at(-1);
+
+      if (!first || !last) {
+        return;
+      }
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    if (!window.renoBlogCommandPaletteReady) {
+      window.renoBlogCommandPaletteReady = true;
+
+      document.addEventListener("keydown", (event) => {
+        const root = document.querySelector("[data-command-palette]");
+        const isLauncher = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k";
+
+        if (isLauncher) {
+          event.preventDefault();
+          openPalette();
+        } else if (event.key === "Escape" && root && !root.hidden) {
+          event.preventDefault();
+          closePalette();
+        } else if (root && !root.hidden) {
+          keepFocusInDialog(event);
+        }
+      });
+
+      document.addEventListener("input", (event) => {
+        if (event.target?.matches?.("[data-command-input]")) {
+          renderCommands();
+        }
+      });
+
+      document.addEventListener("click", (event) => {
+        const trigger = event.target?.closest?.("[data-command-trigger]");
+        const close = event.target?.closest?.("[data-command-close]");
+        const command = event.target?.closest?.("[data-command-id]");
+        const backdrop = event.target?.matches?.("[data-command-palette]");
+
+        if (trigger) {
+          openPalette();
+        } else if (close || backdrop) {
+          closePalette();
+        } else if (command) {
+          executeCommand(command.getAttribute("data-command-id"));
+        }
+      });
+    }
+  })();
+</script>

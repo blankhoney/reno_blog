@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   THEME_STORAGE_KEY,
   getThemeOptions,
+  getThemeInitScript,
   normalizeThemePreference,
 } from "../src/lib/theme";
 
@@ -28,5 +29,15 @@ describe("theme preference", () => {
       "Light",
       "Dark",
     ]);
+  });
+
+  it("prepares theme state for Astro client-side document swaps", () => {
+    const script = getThemeInitScript();
+
+    expect(script).toContain("astro:before-swap");
+    expect(script).toContain("astro:after-swap");
+    expect(script).toContain("applyThemeToDocument(event.newDocument");
+    expect(script).toContain("targetDocument.documentElement.dataset.theme");
+    expect(script).toContain("applyTheme(readPreference())");
   });
 });

@@ -3,6 +3,7 @@ import { getCollection } from "astro:content";
 
 import BaseLayout from "../../layouts/base-layout.astro";
 import { buildContentIndex } from "../../lib/content-index";
+import { buildAiAskPreview } from "../../lib/dashboard";
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, isSupportedLanguage, type Language } from "../../lib/i18n";
 import { getAllLibraryItems } from "../../lib/library";
 import { filterSearchItems } from "../../lib/search";
@@ -19,6 +20,7 @@ const labels = {
     eyebrow: "内容索引",
     input: "搜索公开内容",
     placeholder: "搜索写作、笔记、项目、资料库",
+    preview: "可查询范围",
     title: "搜索",
   },
   en: {
@@ -28,6 +30,7 @@ const labels = {
     eyebrow: "Content index",
     input: "Search public content",
     placeholder: "Search writing, notes, projects, library",
+    preview: "Queryable scope",
     title: "Search",
   },
 };
@@ -72,6 +75,7 @@ const items = filterSearchItems(
   language,
   "",
 );
+const aiPreview = buildAiAskPreview(items, language);
 ---
 
 <BaseLayout language={language} title={copy.title} description={copy.description}>
@@ -79,6 +83,26 @@ const items = filterSearchItems(
     <p class="eyebrow">{copy.eyebrow}</p>
     <h1>{copy.title}</h1>
     <p>{copy.description}</p>
+
+    <section class="ask-preview" id="ask" aria-labelledby="ask-preview-title">
+      <p class="eyebrow">{copy.preview}</p>
+      <h2 id="ask-preview-title">{aiPreview.title}</h2>
+      <p>{aiPreview.body}</p>
+      <div class="metric-grid">
+        {
+          aiPreview.sections.map((section) => (
+            <a href={`/${language}/${section.section === "library" ? "library" : section.section}/`}>
+              <strong>{section.count}</strong>
+              <span>{section.label}</span>
+            </a>
+          ))
+        }
+      </div>
+      <ul class="quiet-list">
+        {aiPreview.suggestions.map((suggestion) => <li>{suggestion}</li>)}
+      </ul>
+      <p class="microcopy">{aiPreview.providerBoundary}</p>
+    </section>
 
     <div class="search-panel" data-search-root data-count-label={copy.count}>
       <label class="sr-only" for="site-search">{copy.input}</label>
@@ -114,35 +138,37 @@ const items = filterSearchItems(
   </section>
 
   <script is:inline>
-    const root = document.querySelector("[data-search-root]");
-    const input = root?.querySelector("[data-search-input]");
-    const count = root?.querySelector("[data-search-count]");
-    const empty = root?.querySelector("[data-search-empty]");
-    const cards = Array.from(root?.querySelectorAll("[data-search-card]") ?? []);
-    const countLabel = root?.getAttribute("data-count-label") ?? "results";
+    (() => {
+      const root = document.querySelector("[data-search-root]");
+      const input = root?.querySelector("[data-search-input]");
+      const count = root?.querySelector("[data-search-count]");
+      const empty = root?.querySelector("[data-search-empty]");
+      const cards = Array.from(root?.querySelectorAll("[data-search-card]") ?? []);
+      const countLabel = root?.getAttribute("data-count-label") ?? "results";
 
-    function updateSearchResults() {
-      const query = input?.value.trim().toLowerCase() ?? "";
-      let visibleCount = 0;
+      function updateSearchResults() {
+        const query = input?.value.trim().toLowerCase() ?? "";
+        let visibleCount = 0;
 
-      cards.forEach((card) => {
-        const matches = !query || card.getAttribute("data-search-text")?.includes(query);
-        card.hidden = !matches;
+        cards.forEach((card) => {
+          const matches = !query || card.getAttribute("data-search-text")?.includes(query);
+          card.hidden = !matches;
 
-        if (matches) {
-          visibleCount += 1;
+          if (matches) {
+            visibleCount += 1;
+          }
+        });
+
+        if (count) {
+          count.textContent = `${visibleCount} ${countLabel}`;
         }
-      });
 
-      if (count) {
-        count.textContent = `${visibleCount} ${countLabel}`;
+        if (empty) {
+          empty.hidden = visibleCount > 0;
+        }
       }
 
-      if (empty) {
-        empty.hidden = visibleCount > 0;
-      }
-    }
-
-    input?.addEventListener("input", updateSearchResults);
+      input?.addEventListener("input", updateSearchResults);
+    })();
   </script>
 </BaseLayout>

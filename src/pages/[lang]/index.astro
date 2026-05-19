@@ -1,6 +1,16 @@
 ---
+import { getCollection } from "astro:content";
+
 import BaseLayout from "../../layouts/base-layout.astro";
+import { buildContentIndex } from "../../lib/content-index";
+import {
+  buildAiAskPreview,
+  buildProjectEvidenceCards,
+  buildSkillEvidenceMap,
+  getActionCards,
+} from "../../lib/dashboard";
 import { SUPPORTED_LANGUAGES, type Language } from "../../lib/i18n";
+import { getAllLibraryItems, getLibraryItemsForSurface } from "../../lib/library";
 
 export function getStaticPaths() {
   return SUPPORTED_LANGUAGES.map((language) => ({ params: { lang: language } }));
@@ -9,22 +19,237 @@ export function getStaticPaths() {
 const language = Astro.params.lang as Language;
 const copy = {
   zh: {
-    title: "内容优先的个人实验室",
-    eyebrow: "静态 · 双语 · 可持续维护",
-    body: "这里会发布长文、笔记、项目案例和少量公开实验。",
+    ai: "AI 入口",
+    content: "内容索引",
+    evidence: "项目证据",
+    heroBody:
+      "一个可持续扩展的个人控制台：项目证据、当前状态、技能来源、内容发现和联系动作都在第一屏可扫描。",
+    now: "当前",
+    projectLink: "查看案例",
+    sectionEyebrow: "Personal Dashboard",
+    skills: "技能证据",
+    title: "Reno Blog",
+    verification: "验证",
   },
   en: {
-    title: "A content-first personal lab",
-    eyebrow: "Static · Bilingual · Maintainable",
-    body: "Long-form writing, notes, project case studies, and a small public playground will live here.",
+    ai: "AI entry",
+    content: "Content index",
+    evidence: "Project evidence",
+    heroBody:
+      "A long-lived personal control surface: project evidence, current focus, skill provenance, content discovery, and contact actions stay scannable on the first screen.",
+    now: "Now",
+    projectLink: "View case study",
+    sectionEyebrow: "Personal Dashboard",
+    skills: "Skill evidence",
+    title: "Reno Blog",
+    verification: "Verification",
   },
 }[language];
+const [writing, notes, projects] = await Promise.all([
+  getCollection("writing"),
+  getCollection("notes"),
+  getCollection("projects"),
+]);
+const library = getAllLibraryItems().map((item) => ({
+  body: item.summary,
+  data: {
+    date: new Date(item.date),
+    language: item.language,
+    status: item.status,
+    summary: item.summary,
+    tags: item.tags,
+    title: item.title,
+    translationKey: item.key,
+  },
+}));
+const contentIndex = buildContentIndex([
+  { section: "writing", entries: writing },
+  { section: "notes", entries: notes },
+  { section: "projects", entries: projects },
+  { section: "library", entries: library },
+]);
+const projectCards = buildProjectEvidenceCards(contentIndex, language);
+const skills = buildSkillEvidenceMap(contentIndex, language, 6);
+const actionCards = getActionCards(language);
+const nowItems = getLibraryItemsForSurface(language, "now");
+const aiPreview = buildAiAskPreview(contentIndex, language);
+const sectionCounts = aiPreview.sections;
 ---
 
 <BaseLayout language={language} title={copy.title}>
-  <section class="hero">
-    <p class="eyebrow">{copy.eyebrow}</p>
-    <h1>{copy.title}</h1>
-    <p>{copy.body}</p>
+  <section class="dashboard-shell" data-dashboard-surface>
+    <canvas class="dashboard-background" data-dashboard-canvas aria-hidden="true"></canvas>
+    <div class="dashboard-inner">
+      <header class="dashboard-hero" data-motion-stagger>
+        <p class="eyebrow">{copy.sectionEyebrow}</p>
+        <h1>{copy.title}</h1>
+        <p>{copy.heroBody}</p>
+      </header>
+
+      <div class="bento-grid" data-motion-stagger>
+        {
+          projectCards.map((project) => (
+            <article class="bento-card bento-card-primary">
+              <p class="eyebrow">{copy.evidence}</p>
+              <h2>{project.title}</h2>
+              <p>{project.outcome}</p>
+              <div class="tag-list" aria-label={language === "zh" ? "技术栈" : "Tech stack"}>
+                {project.techStack.map((tech) => (
+                  <span>{tech}</span>
+                ))}
+              </div>
+              <dl class="evidence-list" aria-label={copy.verification}>
+                {project.verification.slice(0, 3).map((item) => (
+                  <div>
+                    <dt>{item.label}</dt>
+                    <dd>{item.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <a class="text-link" href={project.url}>{copy.projectLink}</a>
+            </article>
+          ))
+        }
+
+        <article class="bento-card">
+          <p class="eyebrow">{copy.now}</p>
+          <h2>{nowItems[0]?.title}</h2>
+          <p>{nowItems[0]?.summary}</p>
+          <ul class="quiet-list">
+            {nowItems.slice(1).map((item) => <li>{item.title}</li>)}
+          </ul>
+          <a class="text-link" href={`/${language}/now/`}>{copy.now}</a>
+        </article>
+
+        <article class="bento-card bento-card-wide">
+          <p class="eyebrow">{copy.skills}</p>
+          <div class="skill-map">
+            {
+              skills.map((skill) => (
+                <a class="skill-row" href={skill.evidence[0]?.url}>
+                  <span>{skill.name}</span>
+                  <small>{skill.evidenceCount}</small>
+                </a>
+              ))
+            }
+          </div>
+        </article>
+
+        <article class="bento-card">
+          <p class="eyebrow">{copy.content}</p>
+          <div class="metric-grid">
+            {
+              sectionCounts.map((section) => (
+                <a href={`/${language}/${section.section === "library" ? "library" : section.section}/`}>
+                  <strong>{section.count}</strong>
+                  <span>{section.label}</span>
+                </a>
+              ))
+            }
+          </div>
+        </article>
+
+        <article class="bento-card bento-card-accent">
+          <p class="eyebrow">{copy.ai}</p>
+          <h2>{aiPreview.title}</h2>
+          <p>{aiPreview.body}</p>
+          <p class="microcopy">{aiPreview.providerBoundary}</p>
+          <a class="text-link" href={`/${language}/search/#ask`}>{aiPreview.title}</a>
+        </article>
+
+        {
+          actionCards.map((card) =>
+            card.kind === "email" ? (
+              <button
+                class="action-card"
+                data-copy-value={card.value}
+                data-copy-label={card.title}
+                type="button"
+              >
+                <span>{card.title}</span>
+                <small>{card.body}</small>
+              </button>
+            ) : (
+              <a class="action-card" href={card.href} rel={card.kind === "github" ? "noreferrer" : undefined} target={card.kind === "github" ? "_blank" : undefined}>
+                <span>{card.title}</span>
+                <small>{card.body}</small>
+              </a>
+            ),
+          )
+        }
+      </div>
+    </div>
   </section>
+
+  <script is:inline>
+    (() => {
+      const copyButtons = document.querySelectorAll("[data-copy-value]");
+
+      copyButtons.forEach((button) => {
+        button.addEventListener("click", async () => {
+          const value = button.getAttribute("data-copy-value");
+          if (!value) {
+            return;
+          }
+
+          await navigator.clipboard?.writeText(value);
+          button.setAttribute("data-copied", "true");
+        });
+      });
+
+      const canvas = document.querySelector("[data-dashboard-canvas]");
+      const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+      const mobile = window.matchMedia?.("(max-width: 700px)");
+
+      if (!canvas || reduce?.matches || mobile?.matches) {
+        return;
+      }
+
+      const context = canvas.getContext("2d");
+      let frame = 0;
+      let animation;
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+        canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+        canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      }
+
+      function draw() {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        context.clearRect(0, 0, width, height);
+        context.fillStyle = "rgba(3, 7, 18, 0.72)";
+        context.fillRect(0, 0, width, height);
+
+        for (let index = 0; index < 48; index += 1) {
+          const x = ((index * 97 + frame * 0.42) % (width + 80)) - 40;
+          const y = ((index * 53 + Math.sin(frame / 60 + index) * 16) % (height + 80)) - 40;
+          context.strokeStyle = index % 3 === 0 ? "rgba(34, 211, 238, 0.28)" : "rgba(52, 211, 153, 0.18)";
+          context.lineWidth = index % 5 === 0 ? 1.4 : 0.8;
+          context.beginPath();
+          context.moveTo(x, y);
+          context.lineTo(x + 42, y + 12);
+          context.stroke();
+        }
+
+        frame += 1;
+        animation = requestAnimationFrame(draw);
+      }
+
+      const observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          resize();
+          draw();
+        } else if (animation) {
+          cancelAnimationFrame(animation);
+        }
+      });
+
+      observer.observe(canvas);
+      window.addEventListener("resize", resize);
+    })();
+  </script>
 </BaseLayout>

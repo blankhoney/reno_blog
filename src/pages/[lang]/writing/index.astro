@@ -1,8 +1,10 @@
 ---
-import BaseLayout from "../../../layouts/base-layout.astro";
 import { getCollection } from "astro:content";
+
+import BaseLayout from "../../../layouts/base-layout.astro";
 import { getPublishedEntriesForLanguage } from "../../../lib/content";
 import { SUPPORTED_LANGUAGES, type Language } from "../../../lib/i18n";
+import { buildTimelineGroups, getTimelineTags } from "../../../lib/timeline";
 
 export function getStaticPaths() {
   return SUPPORTED_LANGUAGES.map((language) => ({ params: { lang: language } }));
@@ -10,8 +12,18 @@ export function getStaticPaths() {
 
 const language = Astro.params.lang as Language;
 const copy = {
-  zh: { title: "写作", body: "长文、技术总结、复盘和学习路径会整理在这里。" },
-  en: { title: "Writing", body: "Essays, technical summaries, retrospectives, and learning paths will live here." },
+  zh: {
+    all: "全部",
+    body: "长文、技术总结、复盘和学习路径按时间线整理，适合按主题回看。",
+    filter: "筛选标签",
+    title: "写作",
+  },
+  en: {
+    all: "All",
+    body: "Essays, technical summaries, retrospectives, and learning paths are organized as a timeline for topic-based review.",
+    filter: "Filter tags",
+    title: "Writing",
+  },
 }[language];
 const entries = getPublishedEntriesForLanguage(
   (await getCollection("writing")).map((entry) => ({
@@ -20,23 +32,61 @@ const entries = getPublishedEntriesForLanguage(
   })),
   language,
 );
+const groups = buildTimelineGroups(entries);
+const tags = getTimelineTags(entries);
 ---
 
 <BaseLayout language={language} title={copy.title}>
-  <section class="page-section">
+  <section class="page-section timeline-page timeline-page-writing" data-timeline-root>
     <h1>{copy.title}</h1>
     <p>{copy.body}</p>
-    <div class="content-list">
+    <div class="filter-bar" aria-label={copy.filter}>
+      <button aria-pressed="true" data-filter-tag="all" type="button">{copy.all}</button>
+      {tags.map((tag) => <button aria-pressed="false" data-filter-tag={tag} type="button">{tag}</button>)}
+    </div>
+    <div class="timeline-groups" data-motion-stagger>
       {
-        entries.map((entry) => (
-          <article class="content-card">
-            <a href={`/${language}/writing/${entry.slug}/`}>
-              <h2>{entry.data.title}</h2>
-              {entry.data.summary && <p>{entry.data.summary}</p>}
-            </a>
-          </article>
+        groups.map((group) => (
+          <section class="timeline-group" aria-labelledby={`writing-${group.year}`}>
+            <h2 id={`writing-${group.year}`}>{group.year}</h2>
+            <div class="timeline-items">
+              {group.items.map((entry) => (
+                <article class="timeline-item" data-tags={(entry.data.tags ?? []).join(" ")}>
+                  <time datetime={entry.data.date.toISOString()}>{entry.data.date.toLocaleDateString(language)}</time>
+                  <h3>
+                    <a href={`/${language}/writing/${entry.slug}/`}>{entry.data.title}</a>
+                  </h3>
+                  {entry.data.summary && <p>{entry.data.summary}</p>}
+                  <div class="tag-list" aria-label={language === "zh" ? "标签" : "Tags"}>
+                    {(entry.data.tags ?? []).map((tag) => <span>{tag}</span>)}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
         ))
       }
     </div>
   </section>
+
+  <script is:inline>
+    (() => {
+      const root = document.querySelector("[data-timeline-root]");
+      root?.addEventListener("click", (event) => {
+        const button = event.target?.closest?.("[data-filter-tag]");
+        if (!button) {
+          return;
+        }
+
+        const selectedTag = button.getAttribute("data-filter-tag");
+        root.querySelectorAll("[data-filter-tag]").forEach((control) => {
+          control.setAttribute("aria-pressed", String(control === button));
+        });
+        root.querySelectorAll("[data-tags]").forEach((item) => {
+          const tags = item.getAttribute("data-tags")?.split(" ") ?? [];
+          item.hidden = selectedTag !== "all" && !tags.includes(selectedTag);
+        });
+      });
+    })();
+  </script>
 </BaseLayout>
